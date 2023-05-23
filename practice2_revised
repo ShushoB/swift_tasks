@@ -195,20 +195,11 @@ func example16 (_ x: Int, _ y: Int) -> Int {
 
 //task17 Find the second largest value in an array.
 func example17 (_ x: [Int]) -> Int {
-    let max = x.max()
-    var xCopy = x
-    var occurencies = 0
-    for i in 0..<x.count{
-        if x[i] == max {
-            occurencies += 1
-        }
-        for _ in 0...occurencies {
-            if let i = xCopy.firstIndex(of: max!) {
-                xCopy.remove(at: i)
-            }
-        }
-    }
-    return xCopy.max()!
+    var xSet = Set<Int>(x)
+    let max = xSet.max()
+    xSet.remove(max!)
+    let secondMax = xSet.max()
+    return secondMax!
 }
 
 //task18 Count the number of words in a sentence.
