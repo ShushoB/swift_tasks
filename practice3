@@ -1,0 +1,536 @@
+import Foundation
+
+// MARK: Task1 Manually implement a sorting function with a closure
+
+extension Array {
+    mutating func mySort(by: (Element, Element) -> Bool) {
+        for i in 0..<self.count {
+            for j in 0..<self.count - i - 1 {
+                if by(self[j], self[j+1]) {
+                    self.swapAt(j, j+1)
+                }
+            }
+        }
+    }
+}
+
+var array = [1,2,2,4,5,6,1,3,7,8,9,11]
+array.mySort{$0 > $1}
+print("1 - Sorted array: \(array)")
+
+
+// MARK: Task 2 Manually implement the reduce function with a closure. Closure will get two params and decide is it addition, subtraction, multiplication, or division
+
+
+extension Array {
+    func myReduce(_ initialResult: Int, operation: (Int, Element) -> Int) -> Int {
+        var result = initialResult
+        for element in self {
+            result = operation(result, element)
+        }
+        return result
+    }
+}
+
+let array1 = [1, 2, 3, 4, 5, 5, 8]
+
+let addition = array1.myReduce(0) { (result, element) in
+    return result + element
+}
+print("2 - Sum:", addition)
+
+let difference = array1.myReduce(0) { (result, element) in
+    return result - element
+}
+print("2 - Difference:", difference)
+
+let product = array1.myReduce(1) { (result, element) in
+    return result * element
+}
+print("2 - Product:", product)
+
+
+
+// MARK: Task 3 Write a closure that takes an array of integers and returns the sum of all the numbers in the array.
+
+var sumOfArray: ([Int]) -> Int = {elements in
+    var sum = 0
+    for element in elements {
+        sum += element
+    }
+    return sum
+}
+
+let numbers = [1, 1, 1, 1, 1]
+let sum = sumOfArray(numbers)
+print("3 - Closure to compute sum: \(sum)")
+
+
+// MARK: Task 4 Create a closure that sorts an array of strings in descending order based on their lengths.
+let words = ["AAAA", "AAA", "AAAAAAA", "A", "AA"]
+var sortedWords = words.sorted(by: {s1, s2  in  s1.count > s2.count})
+print("4 - Sorted by descending length of strings : \(sortedWords)")
+
+
+
+// MARK: Task 5 Implement a closure that filters out all even numbers from an array of integers and returns a new array with only the odd numbers.
+let arrayMix = [1,2,7,3,4,6,8,2,1,9,0,23,6,90,31,47,53]
+var arrayOdd = arrayMix.filter( {s1 in s1 % 2 != 0})
+print("5 - Filtered odd numbers: \(arrayOdd)")
+
+// MARK: Task 6 Write a closure that maps an array of strings to their uppercase equivalents and returns the modified array.
+let mixCased = ["aAaAaAa", "aaa", "Aaa", "aaaaaAA"]
+var upperCased = mixCased.map{ $0.uppercased() }
+print("6 - mapped uppercased strings: \(upperCased)")
+
+
+// MARK: Task 7 Create a closure that calculates the average of an array of floating-point numbers and returns the result.
+
+let arrayFloats: [Float] = [5.6, 4.5, 9.0, 10.1, 4.7]
+let average : ([Float]) -> Float = { numbers in
+    let sum = numbers.reduce(0.0, +)
+    let average = Float(sum) / Float(numbers.count)
+    return average
+}
+print("7 - Average of Floats: \(average(arrayFloats))")
+
+// MARK: Task 8 Implement a closure that checks if a given string is a palindrome (reads the same forwards and backwards).
+
+let word = "hahah"
+let word1 = "hahaha"
+var isPalindrome : (String) -> Bool = { word in
+    if word == String(word.reversed()) {
+        return true
+    }
+    return false
+}
+print("8 - was it a palindrome: \(isPalindrome(word))")
+print("8 - was it a palindrome: \(isPalindrome(word1))")
+
+// MARK: Task 9 Write a closure that finds the maximum value in an array of integers and returns it.
+let newArray = [2,5,1,33,4,5,9,21]
+var maximumValue : ([Int]) -> Int? = { numbers in
+    let max = numbers.max()
+    return max
+}
+print("9 - maximum of the array: \(maximumValue(newArray)!)")
+
+
+// MARK: Task 10 Create a closure that counts the number of occurrences of a specific element in an array and returns the count.
+
+let arr = [12,2,4,6,2,1,2,8,3,5,8,3,1,1,2,2,2,2]
+let key = 2
+let nbOfOccurences : ([Int], Int) -> Int = { array, key in
+    var count = 0
+    for i in array {
+        if key == i {
+            count += 1
+        }
+    }
+    return count
+}
+print("10 - the number \(key) was repeated \(nbOfOccurences(arr, key)) times")
+
+// MARK: Task 11 Implement a closure that calculates the factorial of a given integer and returns the result.
+
+let myFactorial: (Int) -> Int = { number in
+    var factorial = 1
+    if number < 1 {
+        return number
+    }
+    for n in 1...number {
+        factorial *= n
+    }
+    return factorial
+}
+
+let myNum = 5
+print("11 - factorial of \(myNum) is \(myFactorial(myNum))")
+
+
+// MARK: Task 12 Write a closure that filters out all strings from an array that have a length less than or equal to 3, and returns a new array with only the longer strings.
+
+
+let arrayStrings = ["aaaaaaa", "aa", "a", "aaa", "aaaaaaa", "aaaa", "aaaaa"]
+var arrayLongerStrings = arrayStrings.filter { s1 in s1.count > 3}
+print("12 - Filtered long strings: \(arrayLongerStrings)")
+
+// MARK: Task 13 Implement a recursive closure to perform a binary search on a sorted array of integers. Given a sorted array arr and a target value target, write a recursive function binarySearch(arr: [Int], target: Int, low: Int, high: Int) -> Int that returns the index of the target value in the array, or -1 if the target value is not found.
+
+let binarySearch : ([Int], Int, Int, Int) -> Int = { arr, target, low, high in
+    if low <= high {
+        let mid = (high + low) / 2
+        if target == arr[mid] {
+            return mid
+        } else if target < arr[mid] {
+            return binarySearch(arr, target, low, mid-1)
+        } else if target > arr[mid] {
+            return binarySearch(arr, target, mid+1, high)
+        }
+    }
+    return -1
+}
+        
+
+let sortedArray = [1, 2, 3, 3, 5, 7, 8, 9, 10]
+let target = 10
+let index = binarySearch(sortedArray, target, 0, sortedArray.count - 1)
+print("13 - index of the value is: \(index)")
+
+// MARK: Task 14 Create a class called "CustomRectangle" that represents a rectangle with properties for width and height. Implement methods to calculate its area and perimeter.
+
+class CustomRectangle {
+    var width : Int
+    var height : Int
+    
+    init(width: Int, height: Int) {
+            self.width = width
+            self.height = height
+        }
+    
+    func area () -> Int {
+        return self.width * self.height
+    }
+    
+    func perimeter () -> Int {
+        return (self.width + self.height)*2
+    }
+}
+
+let myRect = CustomRectangle(width: 5, height: 6)
+print("14 - Area of rectangle is: \(myRect.area())")
+print("14 - Perimeter of rectangle is: \(myRect.perimeter())")
+
+
+// MARK: Task 15 Write a structure called "Point" that represents a point in a 2D coordinate system. Implement a method to calculate the distance between two points.
+
+import Foundation
+
+struct Point {
+    var x: Double
+    var y: Double
+    
+    func distanceOfTwoPoints(_ point: Point) -> Double {
+        let Xs = point.x - self.x
+        let Ys = point.y - self.y
+        return sqrt(Xs * Xs + Ys * Ys)
+    }
+}
+
+// Example usage
+let point1 = Point(x: 5.0, y: 0.0)
+let point2 = Point(x: 0.0, y: 0.0)
+let distance = point1.distanceOfTwoPoints(point2)
+print("15 - Distance between 2 points is: \(distance)")
+
+
+// MARK: Task 16 Define a class called "Person" with properties for name, age, and gender. Write a method to print out a greeting message including the person's name and age.
+
+class Person {
+    var name: String
+    var age: Int
+    var gender: String
+    
+    init(name: String, age: Int, gender: String) {
+            self.name = name
+            self.age = age
+            self.gender = gender
+        }
+    
+    func greet() -> String {
+        let title: String
+        if self.gender == "Male" {
+            title = "Mr. "
+        } else if self.gender == "Female" {
+            title = "Mrs. "
+        } else {
+            title = "Person"
+        }
+        let greetingMessage = ("Hello \(title)\(self.name) of age \(self.age)")
+        return greetingMessage
+    }
+}
+
+let person1 = Person(name: "Anne", age: 29, gender: "Female")
+let person2 = Person(name: "Jack", age: 27, gender: "Male")
+print("16 - \(person1.greet())")
+print("16 - \(person2.greet())")
+
+
+// MARK: Task 17 Implement a class called "BankAccount" that represents a bank account with properties for account number, account holder name, and balance. Write methods to deposit and withdraw money from the account.
+
+class BankAccount {
+    let accountNumber : String
+    let holderName : String
+    var balance : Double
+    
+    init(accountNumber: String, holderName: String, balance: Double) {
+        self.accountNumber = accountNumber
+        self.holderName = holderName
+        self.balance = balance
+    }
+        
+    func depositMoney(adding amount: Double) {
+        self.balance += amount
+    }
+        
+    func withdrawMoney(withdraw amount: Double) {
+        if self.balance >= amount {
+            self.balance -= amount
+            print("\(amount) was withdarwn, remaining funds are \(self.balance)")
+        } else {
+            print("Not enough funds")
+        }
+    }
+}
+
+var bankAccount = BankAccount(accountNumber: "123456789", holderName: "Shushanik", balance: 1000)
+bankAccount.depositMoney(adding: 700)
+print("17 - withdrawing existing money")
+bankAccount.withdrawMoney(withdraw: 1000)
+print("17 - withdrawing more money")
+bankAccount.withdrawMoney(withdraw: 1000)
+
+
+// MARK: Task 18 Create a structure called "CustomDate" to represent a date with properties for day, month, and year. Write a method to check if a given year is a leap year.
+
+struct CustomDate {
+    let day: Int
+    let month: Int
+    let year: Int
+    
+    init(day: Int, month: Int, year: Int) {
+        self.day = day
+        self.month = month
+        self.year = year
+    }
+
+    func checkLeap() {
+        if self.year % 400 == 0 {
+            print("\(self.year) is a leap year")
+        } else if self.year % 4 == 0 && self.year % 100 != 0 {
+            print("\(self.year) is a leap year")
+        }
+        print("\(self.year) is not a leap year")
+    }
+}
+
+let day = CustomDate(day: 12, month: 10, year: 1993)
+print("18 - customDate and leap year")
+day.checkLeap()
+
+
+// MARK: Task 19 Define a class called "ShoppingCart" with a closure property that calculates the total price of all items in the cart. The cart should have a method to add items and their corresponding prices.
+
+class ShoppingCart {
+    var items: [String: Double] = [:]
+    var totalPriceDouble: Double = 0.0
+    
+    func totalPrice () -> Double {
+        self.totalPriceDouble = items.values.reduce(0.0, +)
+        return totalPriceDouble
+    }
+    
+    func addItem(name: String, price: Double) {
+            items[name] = price
+        
+        }
+        
+}
+
+
+var myCart = ShoppingCart()
+myCart.addItem(name: "Book", price: 35)
+myCart.addItem(name: "Apple", price: 15)
+myCart.addItem(name: "Pen", price: 4)
+
+print("19 - Total price of shopping cart is: \(myCart.totalPrice())")
+
+// MARK: Task 20 Implement a Calculator class with a variety of mathematical operations using closures, structures, and enums.
+
+// MARK: Task 20.1 Create a Calculator class with a property called "result" of type Double, which stores the current result of the calculations.
+
+// MARK: Task 20.2 Implement an enum called OperationType with cases for addition, subtraction, multiplication, and division.
+
+// MARK: Task 20.3 Create a structure called MathOperation with properties for the first operand (operand1), the second operand (operand2), and the operation type (operation).
+
+// MARK: Task 20.4 Add a closure property called performOperation to the Calculator class. This closure should take a MathOperation as a parameter, perform the corresponding operation based on the operation type, and update the result property accordingly.
+
+// MARK: Task 20.5 Implement a method called add, which takes two Double values as parameters and creates a MathOperation instance with the operands and OperationType.addition. The method should then call the performOperation closure to perform the addition.
+
+// MARK: Task 20.6 Create methods for subtraction, multiplication, and division, similar to the add method, which perform the corresponding operations using the performOperation closure.
+
+// MARK: Task 20.7 Implement a method called clearResult, which sets the result property of the Calculator class to 0.
+
+// MARK: Task 20.8 Add a closure property called getResultDescription to the Calculator class. This closure should return a string that describes the current result, including the result value and the last performed operation.
+
+// MARK: Task 20.9 Create a method called printResultDescription, which calls the getResultDescription closure and prints the result description to the console.
+
+// MARK: Task 20.10 Implement a method called calculateAverage, which takes an array of Double values as a parameter and calculates the average of the array elements. This method should use the performOperation closure to perform the necessary addition and division operations.
+
+// MARK: Task 20.11 Create a method called calculateFactorial, which takes an integer value as a parameter and calculates its factorial. This method should use the performOperation closure to perform the necessary multiplication operations.
+
+// MARK: Task 20.12 Implement a method called calculatePower, which takes two Double values as parameters (base and exponent) and calculates the power of the base raised to the exponent. This method should use the performOperation closure to perform the necessary multiplication operations.
+
+// MARK: Task 20.13 Create a method called calculateSquareRoot, which takes a Double value as a parameter and calculates its square root. This method should use the performOperation closure to perform the necessary square root operation.
+
+// MARK: Task 20.14 Implement a method called calculatePercentage, which takes two Double values as parameters (value and percentage) and calculates the percentage of the value. This method should use the performOperation closure to perform the necessary multiplication and division operations.
+
+// MARK: Task 20.15 Test the Calculator class by performing various calculations using the implemented methods. Make sure to print the result descriptions after each calculation to verify the correctness of the operations.
+
+class Calculator {
+    var result: Double = 0.0
+    
+    enum OperationType {
+        case addition
+        case subtraction
+        case multiplication
+        case division
+    }
+   
+    struct MathOperation {
+        var firstOperand: Double
+        var secondOperand: Double
+        var operation: OperationType
+    }
+
+    var performOperation: ((MathOperation) -> Double)?
+
+    func add(_ firstOperand: Double, _ secondOperand: Double) {
+        let operation = MathOperation(firstOperand: firstOperand, secondOperand: secondOperand, operation: .addition)
+        performOperation?(operation)
+    }
+    
+    func subtraction (_ firstOperand: Double, _ secondOperand: Double) {
+        let operation = MathOperation(firstOperand: firstOperand, secondOperand: secondOperand, operation: .subtraction)
+        performOperation?(operation)
+    }
+    
+    func multiplication (_ firstOperand: Double, _ secondOperand: Double) {
+        let operation = MathOperation(firstOperand: firstOperand, secondOperand: secondOperand, operation: .multiplication)
+        performOperation?(operation)
+    }
+    
+    func division (_ firstOperand: Double, _ secondOperand: Double) {
+        let operation = MathOperation(firstOperand: firstOperand, secondOperand: secondOperand, operation: .division)
+        performOperation?(operation)
+    }
+    
+    func clearResult () {
+        result = 0.0
+    }
+    
+    
+    var getResultDescription: (() -> String)?
+    
+    func printResultDescription () {
+        if let description = getResultDescription?() {
+            print(description)
+        }
+    }
+    
+    func calculateAverage (for values: [Double]) -> Double {
+        let sum = values.reduce(0.0, +)
+        let count = Double(values.count)
+        let operation = MathOperation(firstOperand: sum, secondOperand: count, operation: .division)
+        return (performOperation!)(operation)
+    }
+    
+    
+    func calculateFactorial(_ value: Int) {
+        var factorial: Double = 1.0
+        for num in 2...value {
+            let operation = MathOperation(firstOperand: factorial, secondOperand: Double(num), operation: .multiplication)
+            performOperation?(operation)
+            factorial = self.result
+        }
+    }
+
+    
+    func calculatePower(for base: Double, to power: Double) {
+        self.result = 1.0
+        for _ in 1...Int(power) {
+            let operation = MathOperation(firstOperand: result, secondOperand: base, operation: .multiplication)
+            performOperation?(operation)
+        }
+    }
+    
+    func calculateSquareRoot(for value: Double) {
+        let checkUpTo = value / 2.0
+        for i in 1...Int(checkUpTo) {
+            if Double(i*i) == value {
+                result = Double(i)
+            }
+        }
+    }
+
+
+    
+    func calculatePercentage(for value: Double, to percentage: Double) {
+            result = value * (percentage / 100.0)
+    }
+}
+
+
+print("20 - tests")
+let myCalculator = Calculator()
+
+myCalculator.performOperation = { operation in
+    switch operation.operation {
+    case .addition:
+        myCalculator.result = operation.firstOperand + operation.secondOperand
+    case .subtraction:
+        myCalculator.result = operation.firstOperand - operation.secondOperand
+    case .multiplication:
+        myCalculator.result = operation.firstOperand * operation.secondOperand
+    case .division:
+        myCalculator.result = operation.firstOperand / operation.secondOperand
+    }
+    return myCalculator.result
+}
+
+
+myCalculator.getResultDescription = {
+    return "Result of the opertion is: \(myCalculator.result)"
+}
+myCalculator.add(5, 10)
+print("Addition: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.subtraction(10, 5)
+print("Subtraction: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.multiplication(4, 2)
+print("Multiplication: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.division(4, 2)
+print("Division: ", terminator: "")
+myCalculator.printResultDescription()
+
+
+myCalculator.calculateAverage(for: [1.0, 9.0, 10.0, 2.0])
+print("Average: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.calculateFactorial(5)
+print("Factorial: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.calculatePower(for: 2, to: 10)
+print("power: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.calculateSquareRoot(for: 169)
+print("Square root: ", terminator: "")
+myCalculator.printResultDescription()
+
+myCalculator.calculatePercentage(for: 200, to: 20)
+print("Percentage: ", terminator: "")
+myCalculator.printResultDescription()
+
+
+
+
+
