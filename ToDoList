@@ -89,3 +89,13 @@ for task in Task.allTasks {
     }
 }
 print("Completed \(completedCount) tasks out of \(Task.allTasks.count)")
+
+
+
+//The task Read more has been deleted
+//✅ Send homework
+//🟥 Call grandma due on Date(year: 2023, month: 6, day: 16)
+//✅ Read
+//🟩 Clean the house due on Date(year: 2023, month: 6, day: 19)
+//🟩 Go shopping due on Date(year: 2023, month: 6, day: 21)
+Completed 2 tasks out of 5
