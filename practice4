@@ -1,0 +1,413 @@
+import Foundation
+
+
+struct MyDate: Equatable {
+    var year : Int
+    var month: Int
+    var day: Int
+    init(year: Int,
+         month: Int,
+         day: Int) {
+        self.year = year
+        self.month = month
+        self.day = day
+    }
+    
+    static func ==(lhs: MyDate, rhs: MyDate) -> Bool {
+         return lhs.year == rhs.year &&
+                lhs.month == rhs.month &&
+                lhs.day == rhs.day
+    }
+    
+    func calculateDays(to endDate: MyDate) -> Int {
+        let calendar = Calendar.current
+        
+        let startDateComponents = DateComponents(year: self.year, month: self.month, day: self.day)
+        let startDate = calendar.date(from: startDateComponents)!
+        
+        let endDateComponents = DateComponents(year: endDate.year, month: endDate.month, day: endDate.day)
+        let endDate = calendar.date(from: endDateComponents)!
+        
+        let components = calendar.dateComponents([.day], from: startDate, to: endDate)
+        let numberOfDays = components.day!
+        
+        return numberOfDays
+    }
+    
+    func addDays(_ days: Int) -> MyDate {
+        let calendar = Calendar.current
+        var dateComponents = DateComponents()
+        dateComponents.day = days
+        
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else {
+            fatalError("Invalid date")
+        }
+        
+        guard let newDate = calendar.date(byAdding: dateComponents, to: date) else {
+            fatalError("Failed to add days")
+        }
+        
+        let newDateComponents = calendar.dateComponents([.year, .month, .day], from: newDate)
+        return MyDate(year: newDateComponents.year!, month: newDateComponents.month!, day: newDateComponents.day!)
+    }
+    
+    func daysDifference(to otherDate: MyDate) -> Int {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd"
+        
+        guard let startDate = dateFormatter.date(from: self.stringRepresentation),
+              let endDate = dateFormatter.date(from: otherDate.stringRepresentation) else {
+            return 0
+        }
+        
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.day], from: startDate, to: endDate)
+        
+        return dateComponents.day ?? 0
+    }
+    
+    var stringRepresentation: String {
+            let yearString = String(format: "%04d", year)
+            let monthString = String(format: "%02d", month)
+            let dayString = String(format: "%02d", day)
+            
+            return "\(yearString)/\(monthString)/\(dayString)"
+        }
+}
+
+    
+struct Book: Equatable {
+    var title: String
+    var author: String
+    var genre: String
+    var publicationYear: Int
+    var isAvailable: Bool = true
+    var isBorrowed: Bool = false
+    var isReserved: Bool = false
+    var dueDate: MyDate = today.addDays(10)
+    var borrowCount: Int = 0
+    
+    func printBook () {
+        print("\(self.title) by \(self.author)")
+    }
+}
+
+struct Person: Equatable {
+    var name: String
+    var surname: String
+    var phoneNumber: String
+    var borrowedBooks: [(Book, MyDate)]
+    var reservedBooks: [(Book, MyDate)]
+    
+    init(name: String, surname: String, phoneNumber: String, borrowedBooks: [(Book, MyDate)] = [], reservedBooks: [(Book, MyDate)] = []) {
+        self.name = name
+        self.surname = surname
+        self.phoneNumber = phoneNumber
+        self.borrowedBooks = borrowedBooks
+        self.reservedBooks = reservedBooks
+    }
+    
+    var fullName: String {
+        self.name + " " + self.surname
+    }
+    
+    static func ==(lhs: Person, rhs: Person) -> Bool {
+        return lhs.name == rhs.name &&
+            lhs.surname == rhs.surname &&
+            lhs.phoneNumber == rhs.phoneNumber &&
+            lhs.borrowedBooks.elementsEqual(rhs.borrowedBooks, by: { $0.0 == $1.0 && $0.1 == $1.1 }) &&
+            lhs.reservedBooks.elementsEqual(rhs.reservedBooks, by: { $0.0 == $1.0 && $0.1 == $1.1 })
+    }
+}
+
+
+
+
+class Library {
+    let name: String
+    let address: String
+    var books = [Book]()
+    var activeBorrowers: [(Person, MyDate)] = [(Person, MyDate)]()
+    var reservedBooks: [(Person, Book, MyDate)] = [(Person, Book, MyDate)]()
+    
+    init(name: String, address: String) {
+        self.name = name
+        self.address = address
+    }
+    
+    func addBook(book: Book){
+        self.books.append(book)
+    }
+    
+    func removeBook(_ removingBook: Book){
+        if let index = self.books.firstIndex(of: removingBook) {
+            self.books.remove(at: index)
+        }
+    }
+    
+    
+    func searchByTitle(searching searchingTitle: String)  -> Book? {
+        for book in self.books {
+            if searchingTitle == book.title {
+                return book
+            }
+        }
+        return nil
+    }
+    
+    
+    func searchByAuthor(search searchingAuthor: String) -> [Book] {
+        var authorBooks = [Book]()
+        for book in self.books {
+            if searchingAuthor == book.author {
+                authorBooks.append(book)
+            }
+        }
+        return authorBooks
+    }
+    
+    func borrow(borrow book: inout Book, by borrower: inout Person, on borrowDate: MyDate) {
+        if var borrowedBook = searchByTitle(searching: book.title) {
+            borrowedBook.isBorrowed = true
+            borrowedBook.isAvailable = false
+            borrowedBook.borrowCount += 1
+            borrower.borrowedBooks.append((borrowedBook, borrowDate))
+            self.activeBorrowers.append((borrower, borrowDate))
+            borrowedBook.dueDate = borrowDate.addDays(10)
+        }
+    }
+    
+    func returnBook(return book: inout Book, by borrower: inout Person, returnDate: MyDate) {
+        if let index = borrower.borrowedBooks.firstIndex(where: { $0.0.title == book.title }) {
+            borrower.borrowedBooks.remove(at: index)
+            book.isBorrowed = false
+            book.isAvailable = true
+            if let borrowerIndex = self.activeBorrowers.firstIndex(where: { $0.0.fullName == borrower.fullName }) {
+                self.activeBorrowers.remove(at: borrowerIndex)
+            }
+            
+        }
+    }
+    
+    func reserveBook(reserve reservingBook: inout Book, for reserver: inout Person, reserveDate: MyDate) {
+        if let index = books.firstIndex(where: { $0.title == reservingBook.title }) {
+            books[index].isReserved = true
+            books[index].isAvailable = false
+            reservedBooks.append((reserver, reservingBook, reserveDate))
+            reserver.reservedBooks.append((reservingBook, reserveDate))
+        }
+    }
+    
+    
+    func isAvailableForBorrowing (for book: Book) -> Bool {
+        book.isAvailable
+    }
+    
+    func displayAvailableBooks() -> [Book] {
+        var availableBooks = [Book]()
+        for book in self.books {
+            if book.isAvailable {
+                availableBooks.append(book)
+            }
+        }
+        return availableBooks
+    }
+    
+    
+    func sortByPublicationYear () -> [Book] {
+        let sortedBooks = books.sorted(by: {b1 , b2 in
+            return   b1.publicationYear < b2.publicationYear } )
+        return sortedBooks
+    }
+    
+    
+    func calculateBooks() -> Int {
+        let bookCount = self.books.count
+        return bookCount
+    }
+    
+    func mostPopularGenre() -> String {
+        var genreCounts: [String: Int] = [:]
+        for book in books {
+            let genre = book.genre
+            genreCounts[genre, default: 0] += 1
+        }
+        let popularGenres = genreCounts.max(by: { $0.value < $1.value })?.key
+        return popularGenres ?? "No popular genres here"
+    }
+    
+    
+    func averagePublicationYear() -> Int {
+        var sum = 0
+        for book in books {
+            sum += book.publicationYear
+        }
+        let average = sum / books.count
+        return average
+    }
+    
+    
+    func booksBorrowed(by borrower: Person) -> [Book] {
+        return borrower.borrowedBooks.map { $0.0 }
+    }
+    
+    
+    func booksReserved(by reserver: Person) -> [Book] {
+        return reserver.reservedBooks.map { $0.0 }
+    }
+    
+    func displayReservedAndBorrowedBooks(by person: Person) -> [(Book, MyDate)] {
+        let reservedBooks = person.reservedBooks.map { ($0.0, $0.1) }
+        let borrowedBooks = person.borrowedBooks.map { ($0.0, $0.1) }
+        let allBooks = reservedBooks + borrowedBooks
+        return allBooks
+    }
+    
+    func totalBooksByGenre() -> [String: Int] {
+        var genreCounts = [String: Int]()
+        for book in books {
+            if book.isAvailable {
+                if let count = genreCounts[book.genre] {
+                    genreCounts[book.genre] = count + 1
+                } else {
+                    genreCounts[book.genre] = 1
+                }
+            }
+        }
+        return genreCounts
+    }
+    
+    func threeMostBorrowedBooks() -> [Book] {
+        let sortedBooks = self.books.sorted(by: { $0.borrowCount > $1.borrowCount })
+        let mostBorrowed  = Array(sortedBooks.prefix(3))
+        return mostBorrowed
+        
+    }
+    
+    func extendBorrowingPeriod(for book: inout Book, for days: Int) {
+        book.dueDate = book.dueDate.addDays(days)
+    }
+    
+    func displayBorrowers () {
+        for borrower in activeBorrowers {
+            print (borrower.0.fullName, borrower.0.phoneNumber)
+        }
+    }
+    
+    
+//MARK: - Not working methods
+    
+    func reportOverdue (for book: Book, today: MyDate) -> (String) {
+        var message = (String)()
+        if books.contains(book) {
+            let difference = today.daysDifference(to: book.dueDate )
+            if difference >= 0 {
+                message = "Book is overdue for \(difference) days"
+            } else {
+                message = "The borrower still has time to return the book"
+            }
+        }
+        return message
+    }
+    
+    func updateBookInfo(book: inout Book, author: String?, publicationYear: Int?, genre: String?) {
+        if books.contains(book){
+            if let author {
+                book.author = author
+            }
+            if let publicationYear{
+                book.publicationYear = publicationYear
+            }
+            if let genre {
+                book.genre = genre
+            }
+        }
+    }
+    
+    
+    func checkIfReserved (for book: Book) -> Bool {
+        book.isReserved
+    }
+    
+    func calculateLateFee (for book: Book, today: MyDate) -> Int {
+        let fee = Int()
+        if books.contains(book) {
+            let dailyFeeUSD = 1
+            let difference = today.daysDifference(to: book.dueDate )
+            if difference >= 0 {
+                let fee = dailyFeeUSD * difference
+            }
+        }
+        return fee
+    }
+}
+
+
+
+let today = MyDate(year: 2023, month: 06, day: 14)
+
+var library = Library(name: "Azgayin", address: "Yerevan")
+var book1 = Book(title: "It", author: "Stephen King", genre: "Triller", publicationYear: 1980)
+var book2 = Book(title: "Shining", author: "Stephen King", genre: "Triller", publicationYear: 1990)
+var book3 = Book(title: "Shunn u Katun", author: "Hovhannes Tumanyan", genre: "Fairy Tale", publicationYear: 1999)
+var book4 = Book(title: "Anush", author: "Hovhannes Tumanyan", genre: "Fairy Tale", publicationYear: 1991)
+var book5 = Book(title: "Anna Karenina", author: "Leo Tolstoy", genre: "Classic", publicationYear: 1999)
+var book6 = Book(title: "1984", author: "George Orwell", genre: "Dystopia", publicationYear: 1991)
+
+var shushan = Person(name: "Shushan", surname: "Barseghyan", phoneNumber: "99999999")
+var shushanik = Person(name: "Shushanik", surname: "Barseghyan", phoneNumber: "888888888")
+
+library.addBook(book: book1)
+library.addBook(book: book2)
+library.addBook(book: book3)
+library.addBook(book: book4)
+library.addBook(book: book5)
+library.addBook(book: book6)
+
+print("All books \(library.books)")
+print("Hovhannes Tumanyan books: \(library.searchByAuthor(search: "Hovhannes Tumanyan"))")
+print("Searching Shunn u katun by title: \(String(describing: library.searchByTitle(searching: "Shunn u Katun")))")
+
+library.borrow(borrow: &book1, by: &shushan, on: MyDate(year: 2023, month: 02, day: 4))
+library.borrow(borrow: &book2, by: &shushan, on: MyDate(year: 2023, month: 2, day: 14))
+
+library.returnBook(return: &book1, by: &shushan, returnDate: MyDate(year: 2023, month: 02, day: 6))
+library.borrow(borrow: &book3, by: &shushan, on: MyDate(year: 2023, month: 07, day: 4))
+library.returnBook(return: &book3, by: &shushan, returnDate: MyDate(year: 2023, month: 08, day: 6))
+library.borrow(borrow: &book4, by: &shushan, on: MyDate(year: 2023, month: 09, day: 4))
+library.returnBook(return: &book4, by: &shushan, returnDate: MyDate(year: 2023, month: 10, day: 6))
+
+library.borrow(borrow: &book4, by: &shushanik, on: MyDate(year: 2023, month: 03, day: 4))
+library.returnBook(return: &book4, by: &shushanik, returnDate: MyDate(year: 2023, month: 03, day: 6))
+
+library.borrow(borrow: &book1, by: &shushanik, on: MyDate(year: 2023, month: 03, day: 2))
+
+print(book1.borrowCount)
+print("Books borrowed by Shushan \(shushan.borrowedBooks)")
+print("Active borrowers: \(library.activeBorrowers)")
+
+library.reserveBook(reserve: &book2, for: &shushanik, reserveDate: MyDate(year: 2023, month: 03, day: 03))
+print("Reserved books: \(library.reservedBooks)")
+print("Is \(book4.title) available for borrowing - \(library.isAvailableForBorrowing(for: book2))")
+print("Available boooks: \(library.displayAvailableBooks())")
+print("Books sorted by publication yeasrs: \(library.sortByPublicationYear())")
+print("Library has \(library.calculateBooks()) books.")
+print("Most populat genre is: \(library.mostPopularGenre())")
+print("Average publication year of books in library is: \(library.averagePublicationYear())")
+print("Books borrowed by Shushan: \(library.booksBorrowed(by: shushan))")
+print("Books reserved by Shushanik: \(library.booksReserved(by: shushanik))")
+print("Books borrowed and reserved by Shushan with due dates: \(library.displayReservedAndBorrowedBooks(by: shushan))")
+print(library.totalBooksByGenre())
+print(library.threeMostBorrowedBooks())
+print((book4.title, book4.borrowCount))
+print(library.reportOverdue(for: book1, today: MyDate(year: 2023, month: 6, day: 15)))
+book1.dueDate = MyDate(year: 2023, month: 6, day: 1)
+print(library.reportOverdue(for: book1, today: MyDate(year: 2023, month: 6, day: 15)))
+print(book1.author)
+library.updateBookInfo(book: &book1, author: "STEPHEN KING", publicationYear: 1996, genre: "Novel")
+print(book1.author)
+print(library.checkIfReserved(for: book2))
+print(book1.dueDate as Any)
+library.extendBorrowingPeriod(for: &book1, for: 10)
+print(book1.dueDate as Any)
+library.displayBorrowers()
