@@ -66,16 +66,17 @@ final class Task: Equatable {
     }
 }
 
-var t: Task? = Task(content: "Send homework", deadline: Date(year: 2023, month: 6, day: 13))
-var t1: Task? = Task(content: "Call grandma", deadline: Date(year: 2023, month: 6, day: 16))
-var t2: Task? = Task(content: "Read", deadline: Date(year: 2023, month: 6, day: 17))
-var t3: Task? = Task(content: "Clean the house", deadline: Date(year: 2023, month: 6, day: 19))
-var t4: Task? = Task(content: "Go shopping", deadline: Date(year: 2023, month: 6, day: 21))
-var t5: Task? = Task(content: "Read more", deadline: Date(year: 2023, month: 6, day: 29))
 
-t?.markAsCompleted()
-t2?.markAsCompleted()
-t5?.delete()
+var t = Task(content: "Send homework", deadline: Date(year: 2023, month: 6, day: 13))
+var t1 = Task(content: "Call grandma", deadline: Date(year: 2023, month: 6, day: 16))
+var t2 = Task(content: "Read", deadline: Date(year: 2023, month: 6, day: 17))
+var t3 = Task(content: "Clean the house", deadline: Date(year: 2023, month: 6, day: 19))
+var t4 = Task(content: "Go shopping", deadline: Date(year: 2023, month: 6, day: 21))
+var t5 = Task(content: "Read more", deadline: Date(year: 2023, month: 6, day: 29))
+
+t.markAsCompleted()
+t2.markAsCompleted()
+t5.delete()
 
 let today: Date = Date(year: 2023, month: 6, day: 16)
 for task in Task.allTasks{
@@ -91,11 +92,10 @@ for task in Task.allTasks {
 print("Completed \(completedCount) tasks out of \(Task.allTasks.count)")
 
 
-
 //The task Read more has been deleted
 //✅ Send homework
 //🟥 Call grandma due on Date(year: 2023, month: 6, day: 16)
 //✅ Read
 //🟩 Clean the house due on Date(year: 2023, month: 6, day: 19)
 //🟩 Go shopping due on Date(year: 2023, month: 6, day: 21)
-Completed 2 tasks out of 5
+//Completed 2 tasks out of 5
