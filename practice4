@@ -275,12 +275,6 @@ class Library {
         return genreCounts
     }
     
-    func threeMostBorrowedBooks() -> [Book] {
-        let sortedBooks = self.books.sorted(by: { $0.borrowCount > $1.borrowCount })
-        let mostBorrowed  = Array(sortedBooks.prefix(3))
-        return mostBorrowed
-        
-    }
     
     func extendBorrowingPeriod(for book: inout Book, for days: Int) {
         book.dueDate = book.dueDate.addDays(days)
@@ -294,6 +288,12 @@ class Library {
     
     
 //MARK: - Not working methods
+    func threeMostBorrowedBooks() -> [Book] {
+        let sortedBooks = self.books.sorted(by: { $0.borrowCount > $1.borrowCount })
+        let mostBorrowed  = Array(sortedBooks.prefix(3))
+        return mostBorrowed
+        
+    }
     
     func reportOverdue (for book: Book, today: MyDate) -> (String) {
         var message = (String)()
