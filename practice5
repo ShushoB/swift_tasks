@@ -1,0 +1,445 @@
+//
+//  main.swift
+//  project5
+//
+//  Created by Shushanik Barseghyan on 17.06.23.
+//
+
+import Foundation
+
+
+enum Errors: Error {
+    case takenUsername
+    case invalidPassword
+    case outOfRange
+    case invalidUsernameOrEmail
+}
+
+struct Player: Hashable {
+    static func == (lhs: Player, rhs: Player) -> Bool {
+        return lhs.username == rhs.username && lhs.email == rhs.email
+    }
+    
+    var username: String
+    var email: String
+    var password: String = ""
+    var characterEmoji: String = "🙂"
+    var currentPosition: Int = 0
+    var isLoggedIn: Bool = false
+
+    init (username: String, email: String) {
+        self.username = username
+        self.email = email
+    }
+    
+    mutating func signUp (username: String, email: String, password: String) throws {
+        if SnakesAndLadders.players.contains(where: { $0.username == self.username && $0.email == self.email}) {
+            throw Errors.takenUsername
+        }
+        else if (username != self.username && email != self.email) {
+            throw Errors.invalidUsernameOrEmail
+        }
+        else {
+            SnakesAndLadders.players.insert(self)
+            self.password = password
+            print("User \(username) \(email) registered")
+            print("Now you can set an emoji for your character, to do so, call the setEmoji() method")
+        }
+        
+    }
+    
+    mutating func setEmoji(emoji: String) {
+        self.characterEmoji = emoji
+        print("Follow your character's progress here: \(self.characterEmoji)")
+    }
+
+    mutating func login (email: String, password: String) throws {
+        if self.email == email && self.password == password {
+            print("Login successful, good luck at the game, \(username)")
+            self.isLoggedIn = true
+        }
+        else {
+            throw Errors.invalidPassword
+        }
+    }
+    
+    mutating func recoverPassword (username: String, email: String, verifiedByEmail: Bool = true) throws {
+        if self.username == username && self.email == email && verifiedByEmail {
+            print("Please enter a new password: ")
+            self.password = readLine()!
+            print("Password successfully changed")
+        } else {
+            throw Errors.invalidUsernameOrEmail
+        }
+    }
+    
+    mutating func logOut() {
+        print("Logout successful we saved your progress, if you want to continue from the position were you left, call snakesAndLadders.resumeGame(player: ), i fyou want to start from scratch, start a new game")
+        self.isLoggedIn = false
+    }
+}
+    
+
+struct SnakesAndLadders {
+    let originalBoard = ["⬛️", "⬛️", "🪜", "⬛️", "⬛️",
+                         "🪜", "⬛️", "⬛️", "🪜", "🪜",
+                         "⬛️", "⬛️", "⬛️", "🐍", "⬛️",
+                         "⬛️", "⬛️", "⬛️", "🐍", "⬛️",
+                         "⬛️", "🐍", "⬛️", "🐍", "⬛️"]
+                         
+  
+    var currentBoard = ["⬛️", "⬛️", "🪜", "⬛️", "⬛️",
+                        "🪜", "⬛️", "⬛️", "🪜", "🪜",
+                        "⬛️", "⬛️", "⬛️", "🐍", "⬛️",
+                        "⬛️", "⬛️", "⬛️", "🐍", "⬛️",
+                        "⬛️", "🐍", "⬛️", "🐍", "⬛️"]
+    
+    static var players = Set<Player>()
+    
+    func printBoard() {
+        var line = ""
+        var lineCounter = 0
+        let columns = 5
+
+        for (_, element) in currentBoard.enumerated().reversed() {
+            line = element + "" + line
+            lineCounter += 1
+            
+            if lineCounter % columns == 0 {
+                if lineCounter / columns == 2 || lineCounter / columns == 4 {
+                    let reversedLine = String(line.reversed())
+                    print(reversedLine)
+                } else {
+                    print(line)
+                }
+                
+                line = ""
+            }
+        }
+    }
+    
+    
+    mutating func startSoloGame(forPlayer player: inout Player) {
+        if player.isLoggedIn {
+            player.currentPosition = 0
+            print("Welcome to the game, \(player.username)!")
+            
+            currentBoard[player.currentPosition] = player.characterEmoji
+            printBoard()
+            print("Ready! Set! Go! Roll your dices!")
+        }
+    }
+  
+    mutating func movePlayer(movingPlayer: inout Player, forSteps steps: Int) throws {
+        // recover the previous position to original
+        let leavingSpot = movingPlayer.currentPosition
+        currentBoard[leavingSpot] = originalBoard[leavingSpot]
+        movingPlayer.currentPosition += steps
+        
+        // snakes and leaders logic
+        if movingPlayer.currentPosition == 2 {
+            movingPlayer.currentPosition = 10
+        } else if movingPlayer.currentPosition == 5 {
+            movingPlayer.currentPosition = 16
+        } else if movingPlayer.currentPosition == 8 {
+            movingPlayer.currentPosition = 17
+        } else if movingPlayer.currentPosition == 9 {
+            movingPlayer.currentPosition = 11
+        } else if movingPlayer.currentPosition == 13 {
+            movingPlayer.currentPosition = 3
+        } else if movingPlayer.currentPosition == 18 {
+            movingPlayer.currentPosition = 7
+        } else if movingPlayer.currentPosition == 21 {
+            movingPlayer.currentPosition = 19
+        } else if movingPlayer.currentPosition == 23 {
+            movingPlayer.currentPosition = 15
+        }
+        
+        
+        if movingPlayer.currentPosition > 24 {
+            throw Errors.outOfRange
+        } else {
+            if  currentBoard[movingPlayer.currentPosition] != "🐍" && currentBoard[movingPlayer.currentPosition] != "🪜" && currentBoard[movingPlayer.currentPosition] != "⬛️"   {
+                currentBoard[movingPlayer.currentPosition] = "👫"
+            } else {
+                currentBoard[movingPlayer.currentPosition] = movingPlayer.characterEmoji
+            }
+            printBoard()
+        }
+    }
+    
+    mutating func diceRoll(player: inout Player) throws {
+        if player.isLoggedIn {
+            if player.currentPosition >= 24 {
+                let victoryMessage = "\(player.username) won!!!"
+                print(victoryMessage)
+                print(String(repeating: "👑", count: (victoryMessage.count)))
+                print("Start a new solo or competition game")
+                throw Errors.outOfRange
+            } else {
+                let diceRolled = Int.random(in: 1...6)
+                print("\(player.username) rolled \(diceRolled)")
+                do {
+                    try movePlayer(movingPlayer: &player, forSteps: diceRolled)
+                } catch Errors.outOfRange {
+                    print("Game over")
+                }
+            }
+        }
+    }
+    
+    mutating func startCompetitionGame(forPlayer1 player1: inout Player, forPlayer2 player2: inout Player) {
+        if player1.isLoggedIn && player2.isLoggedIn{
+            print("Welcome to the game, \(player1.username) and \(player2.username)!")
+            player1.currentPosition = 0
+            player2.currentPosition = 0
+            currentBoard[player1.currentPosition] = "👫"
+            print("Ready! Set! Go! Roll your dices!")
+            printBoard()
+        }
+        else {
+            print("An opponent left the game, sorry")
+        }
+    }
+    
+    mutating func resumeGame (player: Player) {
+        if player.isLoggedIn {
+            print("Glad to see you again, roll your dices to continue")
+            currentBoard[player.currentPosition] = player.characterEmoji
+            printBoard()
+        }
+    }
+}
+
+//MARK: - First player initialization
+
+var me = Player(username: "Shush", email: "shush@example.com")
+
+do {
+    try me.signUp(username: "Shush", email: "shush@example.com", password: "Password")
+} catch Errors.takenUsername {
+    print("The username is taken, please think of another")
+} catch Errors.invalidUsernameOrEmail {
+    print("Invalid username or email.")
+} catch {
+    print("An unexpected error: \(error)")
+}
+
+me.setEmoji(emoji: "💃")
+
+do {
+    try me.login(email: "shush@example.com", password: "Password")
+} catch Errors.invalidPassword {
+    print("The password you provided is wrong")
+} catch {
+    print("An unexpected error: \(error)")
+}
+
+do {
+    try me.recoverPassword(username: "Shush", email: "shPsh@example.com")
+} catch Errors.invalidUsernameOrEmail {
+    print("Invalid username or email.")
+} catch {
+    print("An unexpected error: \(error)")
+}
+   
+
+//MARK: - Second player initialization
+var opponent = Player(username: "Opponent", email: "opponent@example.com")
+
+do {
+    try opponent.signUp(username: "Opponent", email: "opponent@example.com", password: "Password")
+} catch Errors.takenUsername {
+    print("The username is taken, please think of another")
+} catch Errors.invalidUsernameOrEmail {
+    print("Invalid username or email.")
+} catch {
+    print("An unexpected error: \(error)")
+}
+
+opponent.setEmoji(emoji: "🕺")
+
+do {
+    try opponent.login(email: "opponent@example.com", password: "Password")
+} catch Errors.invalidPassword {
+    print("The password you provided is wrong")
+} catch {
+    print("An unexpected error: \(error)")
+}
+
+//MARK: - Game initialization
+var snakesAndLadders = SnakesAndLadders()
+snakesAndLadders.printBoard()
+
+//MARK: - One-player game
+
+//snakesAndLadders.startSoloGame(forPlayer: &me)
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+
+//me.logOut()
+
+//snakesAndLadders.resumeGame(player: me)
+
+//do {
+//    try me.login(email: "shush@example.com", password: "Password")
+//} catch Errors.invalidPassword {
+//    print("The password you provided is wrong")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+
+//MARK: - two-player game
+
+//snakesAndLadders.startCompetitionGame(forPlayer1: &me, forPlayer2: &opponent)
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &opponent)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &opponent)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &opponent)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &opponent)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &opponent)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
+//
+//do {
+//    try snakesAndLadders.diceRoll(player: &me)
+//}
+//catch Errors.outOfRange{
+//    print("Game is over")
+//} catch {
+//    print("An unexpected error: \(error)")
+//}
